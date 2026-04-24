@@ -1,0 +1,1558 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Informe de Fratura — MRS Logística</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&family=Syne:wght@700;800&display=swap');
+
+:root {
+  --navy:    #0c2340;
+  --blue:    #1a4f8a;
+  --blue2:   #2563a8;
+  --gold:    #e8920a;
+  --gold-lt: #fff8ed;
+  --red:     #c0392b;
+  --green:   #16a34a;
+  --bg:      #eef1f6;
+  --card:    #ffffff;
+  --border:  #d1d9e6;
+  --muted:   #64748b;
+  --text:    #0f1d2e;
+  --input-bg:#f4f7fb;
+  --tag-h:   9px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+
+/* ── TOP BAR ── */
+.topbar{
+  background:var(--navy);
+  height:58px;display:flex;align-items:center;justify-content:space-between;
+  padding:0 28px;position:sticky;top:0;z-index:200;
+  box-shadow:0 2px 20px rgba(0,0,0,.35);
+}
+.tb-left{display:flex;align-items:center;gap:14px}
+.tb-logo{
+  background:var(--gold);color:var(--navy);
+  font-family:'Syne',sans-serif;font-size:11px;font-weight:800;
+  letter-spacing:.1em;padding:4px 11px;border-radius:4px;
+}
+.tb-title{
+  font-family:'Syne',sans-serif;font-size:17px;font-weight:800;
+  color:#fff;letter-spacing:.04em;text-transform:uppercase;
+}
+.tb-title em{color:var(--gold);font-style:normal}
+.tb-right{display:flex;gap:8px;align-items:center}
+
+.btn{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:8px 16px;border-radius:6px;border:none;cursor:pointer;
+  font-family:'DM Sans',sans-serif;font-weight:600;font-size:12.5px;
+  letter-spacing:.03em;transition:all .15s;
+}
+.btn-ghost{background:rgba(255,255,255,.09);color:#fff;border:1px solid rgba(255,255,255,.2)}
+.btn-ghost:hover{background:rgba(255,255,255,.18)}
+.btn-gold{background:var(--gold);color:var(--navy)}
+.btn-gold:hover{background:#f0a020;box-shadow:0 4px 14px rgba(232,146,10,.45);transform:translateY(-1px)}
+.btn-blue{background:var(--blue2);color:#fff}
+.btn-blue:hover{background:#1e56a0}
+.btn-green{background:var(--green);color:#fff}
+.btn-green:hover{background:#15803d;box-shadow:0 4px 14px rgba(22,163,74,.4);transform:translateY(-1px)}
+.btn-green:disabled{background:#94a3b8;cursor:not-allowed;transform:none;box-shadow:none}
+
+/* ── SEVERITY ── */
+.sev-btn{
+  padding:9px 20px;border-radius:8px;border:2px solid var(--border);
+  background:var(--input-bg);cursor:pointer;font-family:'DM Sans',sans-serif;
+  font-weight:700;font-size:13px;transition:all .15s;
+}
+.sev-btn:hover{border-color:var(--blue2)}
+.sev-btn.sev-Baixa   {border-color:#16a34a;background:#f0fdf4;color:#166534}
+.sev-btn.sev-Média   {border-color:#ca8a04;background:#fefce8;color:#854d0e}
+.sev-btn.sev-Alta    {border-color:#ea580c;background:#fff7ed;color:#9a3412}
+.sev-btn.sev-Crítica {border-color:#dc2626;background:#fef2f2;color:#991b1b}
+
+/* save dot */
+.sdot{width:7px;height:7px;border-radius:50%;background:#475569;transition:background .3s}
+.sdot.ok{background:#22c55e}
+
+/* ── LAYOUT ── */
+.wrap{max-width:900px;margin:0 auto;padding:24px 20px 72px}
+
+/* ── TIPO SELECTOR (hero) ── */
+.tipo-hero{
+  background:var(--card);border-radius:12px;
+  padding:22px 24px;margin-bottom:20px;
+  box-shadow:0 1px 8px rgba(0,0,0,.07);
+}
+.tipo-hero-title{
+  font-family:'Syne',sans-serif;font-size:11px;font-weight:800;
+  letter-spacing:.12em;text-transform:uppercase;color:var(--muted);
+  margin-bottom:14px;
+}
+.tipo-btns{display:flex;gap:10px;flex-wrap:wrap}
+.tipo-btn{
+  flex:1 1 180px;padding:14px 16px;border-radius:8px;
+  border:2px solid var(--border);background:var(--input-bg);
+  cursor:pointer;transition:all .18s;text-align:left;
+}
+.tipo-btn:hover{border-color:var(--blue2);background:#eff6ff}
+.tipo-btn.active{border-color:var(--gold);background:var(--gold-lt)}
+.tipo-btn .tb-icon{font-size:22px;margin-bottom:6px}
+.tipo-btn .tb-name{font-weight:700;font-size:14px;color:var(--text)}
+.tipo-btn .tb-desc{font-size:11px;color:var(--muted);margin-top:2px}
+
+/* ── HEADER CARD ── */
+.header-card{
+  background:linear-gradient(135deg,var(--navy) 0%,#1a3a6e 55%,var(--blue2) 100%);
+  border-radius:12px;padding:22px 26px;margin-bottom:20px;
+  position:relative;overflow:hidden;
+  box-shadow:0 4px 24px rgba(12,35,64,.3);
+}
+.header-card::after{
+  content:'';position:absolute;bottom:-60px;right:-40px;
+  width:220px;height:220px;border-radius:50%;
+  background:rgba(232,146,10,.08);pointer-events:none;
+}
+.hc-top{display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:14px}
+.hc-num{
+  background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);
+  border-radius:8px;padding:10px 18px;min-width:200px;
+}
+.hc-num label{font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.5);display:block;margin-bottom:4px}
+.hc-num input{
+  background:transparent;border:none;outline:none;
+  font-family:'DM Mono',monospace;font-size:16px;font-weight:500;
+  color:#fff;width:100%;
+}
+.hc-num input::placeholder{color:rgba(255,255,255,.35)}
+.hc-fields{display:flex;gap:20px;flex-wrap:wrap;margin-top:16px}
+.hc-field label{font-size:9px;font-weight:700;letter-spacing:.11em;text-transform:uppercase;color:rgba(255,255,255,.5);display:block;margin-bottom:4px}
+.hc-field input,.hc-field select{
+  background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);
+  border-radius:5px;padding:6px 10px;font-size:13px;color:#fff;
+  font-family:'DM Sans',sans-serif;outline:none;
+}
+.hc-field select option{color:var(--text);background:#fff}
+.hc-field input::placeholder{color:rgba(255,255,255,.35)}
+
+.status-pill{
+  display:inline-flex;align-items:center;gap:7px;
+  padding:5px 14px;border-radius:99px;font-size:12px;font-weight:700;
+  letter-spacing:.04em;border:1.5px solid rgba(255,255,255,.2);
+  color:#fff;background:rgba(255,255,255,.1);
+  transition:all .2s;
+}
+.status-pill.ruptura{background:rgba(192,57,43,.25);border-color:#e57373;color:#ffcdd2}
+.status-pill.solda{background:rgba(232,146,10,.2);border-color:#ffd54f;color:#ffe082}
+.status-pill.trinca{background:rgba(37,99,168,.3);border-color:#90caf9;color:#bbdefb}
+.status-pill.provisorio{background:rgba(22,163,74,.2);border-color:#81c784;color:#c8e6c9}
+
+/* ── SECTION CARD ── */
+.sec{
+  background:var(--card);border-radius:12px;
+  margin-bottom:14px;overflow:hidden;
+  box-shadow:0 1px 6px rgba(0,0,0,.06);
+  border:1px solid var(--border);
+}
+.sec-hdr{
+  display:flex;align-items:center;gap:12px;
+  padding:13px 20px;cursor:pointer;user-select:none;
+  transition:background .15s;border-bottom:1px solid transparent;
+}
+.sec-hdr:hover{background:#f8fafc}
+.sec-hdr.open{border-bottom-color:var(--border)}
+.sec-num{
+  width:24px;height:24px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Syne',sans-serif;font-size:12px;font-weight:800;
+  background:var(--navy);color:#fff;flex-shrink:0;
+}
+.sec-num.gold{background:var(--gold);color:var(--navy)}
+.sec-num.red{background:var(--red);color:#fff}
+.sec-title{
+  font-family:'Syne',sans-serif;font-size:13px;font-weight:800;
+  letter-spacing:.06em;text-transform:uppercase;color:var(--navy);flex:1;
+}
+.sec-chev{color:var(--muted);font-size:16px;transition:transform .2s}
+.sec-chev.open{transform:rotate(180deg)}
+.sec-body{padding:20px;display:none}
+.sec-body.open{display:block}
+
+/* ── GRID / FIELDS ── */
+.fg{display:flex;flex-wrap:wrap;gap:12px}
+.f{display:flex;flex-direction:column;gap:4px;flex:1 1 190px;min-width:160px}
+.f.w{flex:1 1 100%}
+.f.h{flex:1 1 280px}
+.f label{
+  font-size:9.5px;font-weight:700;letter-spacing:.09em;
+  text-transform:uppercase;color:var(--muted);
+}
+.f label .r{color:var(--red);margin-left:2px}
+.f input,.f select,.f textarea{
+  background:var(--input-bg);border:1px solid var(--border);
+  border-radius:6px;padding:8px 11px;font-size:13px;
+  font-family:'DM Sans',sans-serif;color:var(--text);outline:none;
+  transition:border-color .15s,background .15s;width:100%;
+}
+.f input:focus,.f select:focus,.f textarea:focus{
+  border-color:var(--blue2);background:#fff;
+}
+.f textarea{resize:vertical;min-height:70px}
+.f input.err,.f select.err{border-color:var(--red);background:#fff5f5}
+
+/* ── DIVIDER LABEL ── */
+.div-lbl{
+  font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--muted);padding:10px 0 6px;border-top:1px solid var(--border);
+  margin-top:8px;display:flex;align-items:center;gap:8px;
+}
+.div-lbl::after{content:'';flex:1;height:1px;background:var(--border)}
+
+/* ── SOLDA PANEL (hidden by default) ── */
+.solda-panel{
+  background:#fff8ed;border:1.5px solid #fde68a;
+  border-radius:8px;padding:16px 18px;margin-top:12px;
+}
+.solda-panel-title{
+  font-family:'Syne',sans-serif;font-size:11px;font-weight:800;
+  letter-spacing:.1em;text-transform:uppercase;color:#92400e;
+  margin-bottom:12px;display:flex;align-items:center;gap:8px;
+}
+
+/* ── TEMPOS ── */
+.tempos-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(170px,1fr));
+  gap:10px;
+}
+.tempo-box{
+  background:var(--input-bg);border:1px solid var(--border);
+  border-radius:8px;padding:10px 12px;
+}
+.tempo-box label{
+  font-size:9px;font-weight:700;letter-spacing:.09em;
+  text-transform:uppercase;color:var(--muted);display:block;margin-bottom:5px;
+}
+.tempo-box input{
+  background:transparent;border:none;outline:none;
+  font-family:'DM Mono',monospace;font-size:14px;font-weight:500;
+  color:var(--text);width:100%;
+}
+.tempo-total{
+  background:var(--navy);color:#fff;border-radius:8px;
+  padding:10px 14px;display:flex;flex-direction:column;gap:2px;
+}
+.tempo-total label{font-size:9px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:rgba(255,255,255,.5)}
+.tempo-total .val{font-family:'DM Mono',monospace;font-size:15px;font-weight:500;color:var(--gold)}
+.entrega-row{
+  margin-top:12px;background:#f0fdf4;border:1px solid #86efac;
+  border-radius:8px;padding:10px 14px;display:flex;align-items:center;gap:12px;
+}
+.entrega-row label{font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#166534;min-width:120px}
+.entrega-row input{
+  background:transparent;border:none;outline:none;
+  font-size:13px;font-family:'DM Sans',sans-serif;color:#166534;font-weight:600;flex:1;
+}
+
+/* ── CONTORNO ── */
+.contorno-grid{display:flex;flex-wrap:wrap;gap:10px}
+.cond-item{
+  flex:1 1 140px;background:var(--input-bg);border:1px solid var(--border);
+  border-radius:8px;padding:10px 12px;
+}
+.cond-item label{font-size:9px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:6px}
+.cond-btns{display:flex;gap:5px;flex-wrap:wrap}
+.cond-btn{
+  padding:4px 10px;border-radius:99px;font-size:11px;font-weight:600;
+  border:1.5px solid var(--border);background:transparent;cursor:pointer;
+  color:var(--muted);transition:all .15s;
+}
+.cond-btn:hover{border-color:var(--blue2);color:var(--blue2)}
+.cond-btn.sel-otimo{border-color:#16a34a;background:#f0fdf4;color:#166534}
+.cond-btn.sel-bom{border-color:#2563a8;background:#eff6ff;color:#1e40af}
+.cond-btn.sel-regular{border-color:#d97706;background:#fffbeb;color:#92400e}
+.cond-btn.sel-ruim{border-color:#dc2626;background:#fef2f2;color:#991b1b}
+
+/* ── PHOTOS ── */
+.photo-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.photo-slot{
+  border:1.5px dashed var(--border);border-radius:8px;
+  background:var(--input-bg);min-height:120px;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:7px;padding:12px;cursor:pointer;transition:all .18s;position:relative;overflow:hidden;
+}
+.photo-slot:hover{border-color:var(--blue2);background:#eff6ff}
+.photo-slot img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:6px}
+.photo-slot .pi{font-size:24px;position:relative;z-index:1}
+.photo-slot .pl{font-size:10px;font-weight:700;text-align:center;color:#64748b;text-transform:uppercase;letter-spacing:.06em;position:relative;z-index:1}
+.photo-slot .ps{font-size:9px;color:#94a3b8;text-align:center;position:relative;z-index:1}
+.photo-slot .pr{
+  position:absolute;top:5px;right:6px;z-index:3;
+  background:rgba(192,57,43,.85);color:#fff;border:none;border-radius:50%;
+  width:20px;height:20px;font-size:12px;cursor:pointer;display:none;
+  align-items:center;justify-content:center;
+}
+.photo-slot:hover .pr{display:flex}
+.photo-slot input{display:none}
+
+/* ── REFERÊNCIA TÉCNICA ── */
+.ref-box{
+  margin-top:12px;background:var(--gold-lt);
+  border:1px solid #fde68a;border-radius:8px;padding:12px 16px;
+}
+.ref-box strong{
+  display:block;font-family:'Syne',sans-serif;font-size:11px;
+  font-weight:800;letter-spacing:.08em;text-transform:uppercase;
+  color:#92400e;margin-bottom:4px;
+}
+.ref-box p{font-size:11.5px;color:#78350f;line-height:1.55}
+
+/* ── ACTION TABLE ── */
+.action-wrap{overflow-x:auto}
+.action-table{width:100%;border-collapse:collapse;font-size:12.5px;min-width:560px}
+.action-table th{
+  background:var(--navy);color:#fff;
+  font-family:'Syne',sans-serif;font-size:9.5px;font-weight:800;
+  letter-spacing:.1em;text-transform:uppercase;padding:9px 10px;text-align:left;
+}
+.action-table td{padding:7px 9px;border-bottom:1px solid var(--border);vertical-align:top}
+.action-table tr:last-child td{border-bottom:none}
+.action-table input,.action-table select,.action-table textarea{
+  width:100%;background:var(--input-bg);border:1px solid var(--border);
+  border-radius:4px;padding:5px 8px;font-family:'DM Sans',sans-serif;font-size:12px;outline:none;
+}
+.action-table textarea{resize:vertical;min-height:44px}
+
+/* ── PROGRESS ── */
+.prog-wrap{margin-bottom:18px}
+.prog-top{display:flex;justify-content:space-between;font-size:10.5px;font-weight:700;color:var(--muted);margin-bottom:5px;letter-spacing:.05em;text-transform:uppercase}
+.prog-track{background:#dde3ed;border-radius:99px;height:6px;overflow:hidden}
+.prog-fill{background:linear-gradient(90deg,var(--blue2),var(--gold));height:100%;border-radius:99px;transition:width .4s ease}
+
+/* ── TOAST ── */
+#toast{
+  position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(8px);
+  background:var(--navy);color:#fff;padding:11px 22px;border-radius:8px;
+  font-size:13px;font-weight:600;letter-spacing:.03em;
+  box-shadow:0 8px 28px rgba(0,0,0,.28);
+  opacity:0;pointer-events:none;transition:opacity .25s,transform .25s;z-index:999;
+}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* ── SIGNATURES ── */
+.sig-wrap{display:flex;gap:24px;flex-wrap:wrap;margin-top:22px;padding-top:18px;border-top:2px solid var(--border)}
+.sig-blk{flex:1 1 200px}
+.sig-lbl{font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.09em;color:var(--muted);font-family:'Syne',sans-serif}
+.sig-line{border-bottom:1.5px solid var(--border);height:32px;margin-bottom:5px}
+.sig-name{font-size:12.5px;color:#475569}
+.stamp{
+  background:var(--navy);border-radius:6px;padding:9px 16px;
+  align-self:flex-end;
+}
+.stamp .st1{font-size:8px;color:rgba(255,255,255,.45);text-transform:uppercase;letter-spacing:.1em;font-weight:700}
+.stamp .st2{font-size:12px;color:var(--gold);font-family:'Syne',sans-serif;font-weight:800;letter-spacing:.06em}
+
+@media(max-width:600px){
+  .topbar{padding:0 12px}
+  .tb-title{font-size:14px}
+  .wrap{padding:14px 10px 60px}
+  .f{flex:1 1 100%}
+}
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <div class="tb-left">
+    <span class="tb-logo">MRS</span>
+    <span class="tb-title">Informe · <em>Fratura</em></span>
+  </div>
+  <div class="tb-right">
+    <span class="sdot" id="sdot"></span>
+    <button class="btn btn-ghost" onclick="verHistorico()">📋 Histórico</button>
+    <button class="btn btn-ghost" onclick="salvar()">💾 Salvar</button>
+    <button class="btn btn-ghost" onclick="limpar()">🗑 Limpar</button>
+    <button class="btn btn-green" onclick="enviarSheets()" id="btn_enviar">📊 Enviar ao Banco</button>
+    <button class="btn btn-gold" onclick="gerarPDF()">📄 Gerar PDF</button>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <!-- PROGRESS -->
+  <div class="prog-wrap">
+    <div class="prog-top"><span>Preenchimento</span><span id="pct">0%</span></div>
+    <div class="prog-track"><div class="prog-fill" id="pfill" style="width:0%"></div></div>
+  </div>
+
+  <!-- TIPO SELECTOR -->
+  <div class="tipo-hero">
+    <div class="tipo-hero-title">Tipo de ocorrência</div>
+    <div class="tipo-btns">
+      <button class="tipo-btn active" id="btn_trilho" onclick="setTipo('trilho')">
+        <div class="tb-icon">🛤️</div>
+        <div class="tb-name">Fratura em Trilho</div>
+        <div class="tb-desc">Ruptura ou trinca no corpo do trilho</div>
+      </button>
+      <button class="tipo-btn" id="btn_solda" onclick="setTipo('solda')">
+        <div class="tb-icon">🔥</div>
+        <div class="tb-name">Partida em Solda</div>
+        <div class="tb-desc">Fratura em solda aluminotérmica ou flash-butt</div>
+      </button>
+      <button class="tipo-btn" id="btn_outro" onclick="setTipo('outro')">
+        <div class="tb-icon">⚠️</div>
+        <div class="tb-name">Outro</div>
+        <div class="tb-desc">Outro tipo de defeito / ocorrência</div>
+      </button>
+    </div>
+  </div>
+
+  <!-- HEADER CARD -->
+  <div class="header-card">
+    <div class="hc-top">
+      <div>
+        <div style="font-size:9px;font-weight:700;letter-spacing:.13em;text-transform:uppercase;color:rgba(255,255,255,.45);margin-bottom:6px">Número do Informe</div>
+        <div class="hc-num" style="width:220px">
+          <input id="numero" placeholder="MRS-VP-FT-0000" oninput="prog()"/>
+        </div>
+      </div>
+      <div id="status_pill" class="status-pill">— Status —</div>
+    </div>
+    <div class="hc-fields">
+      <div class="hc-field">
+        <label>Data</label>
+        <input type="date" id="data_ev" oninput="prog()"/>
+      </div>
+      <div class="hc-field">
+        <label>Horário da ocorrência</label>
+        <input type="time" id="hora_ev"/>
+      </div>
+      <div class="hc-field">
+        <label>Seção / Pátio</label>
+        <input id="secao" placeholder="Ex.: FJR/FAL, FFX1" oninput="prog()"/>
+      </div>
+      <div class="hc-field">
+        <label>Status</label>
+        <select id="status_oc" onchange="updatePill();prog()">
+          <option value="">—</option>
+          <option value="ruptura">Ruptura Completa</option>
+          <option value="solda">Partida em Solda</option>
+          <option value="trinca">Trinca / Defeito</option>
+          <option value="provisorio">Reparo Provisório</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <!-- S1: IDENTIFICAÇÃO -->
+  <div class="sec">
+    <div class="sec-hdr open" onclick="tog(this)">
+      <div class="sec-num">1</div>
+      <div class="sec-title">Identificação</div>
+      <div class="sec-chev open">▾</div>
+    </div>
+    <div class="sec-body open">
+      <div class="fg">
+        <div class="f"><label>Km / Localização <span class="r">*</span></label><input id="km" placeholder="Ex.: 506,641 ou km 44+890" oninput="prog()"/></div>
+        <div class="f"><label>Linha</label><input id="linha" placeholder="Ex.: 1, 2, Principal"/></div>
+        <div class="f"><label>Fila / Lado</label>
+          <select id="fila">
+            <option value="">—</option>
+            <option>Esquerda</option><option>Direita</option>
+          </select>
+        </div>
+        <div class="f"><label>Posição (curva)</label>
+          <select id="posicao_curva">
+            <option value="">—</option>
+            <option>Externo (Alta)</option><option>Interno (Baixa)</option><option>Tangente</option>
+          </select>
+        </div>
+        <div class="f"><label>Tipo de ativo / seção de via</label>
+          <select id="tipo_ativo">
+            <option value="">—</option>
+            <option>Curva</option><option>Tangente</option>
+            <option>Aparelho de Mudança de Via</option><option>Pátio</option>
+          </select>
+        </div>
+        <div class="f"><label>Descrição do local</label><input id="desc_local" placeholder="Ex.: Terraplanagem, Viaduto, Corte..."/></div>
+        <div class="f"><label>Pátio</label><input id="patio" placeholder="Ex.: NA, Pátio Julio de Mesquita"/></div>
+        <div class="f"><label>Informado por <span class="r">*</span></label><input id="info_por" placeholder="Ex.: Eletro Eletrônica – Plantão" oninput="prog()"/></div>
+        <div class="f"><label>Acionamento / Informado a</label><input id="info_a" placeholder="Ex.: Jânio EPA, CCM Douglas"/></div>
+        <div class="f"><label>Elaborado por</label><input id="elaborado" placeholder="Nome completo"/></div>
+        <div class="f"><label>Aprovado por</label><input id="aprovado" placeholder="Gestor / Engenheiro"/></div>
+        <div class="f"><label>Malha / Rede</label><input id="malha" placeholder="Ex.: Rede Vale do Paraíba"/></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- S2: DADOS DO TRILHO -->
+  <div class="sec">
+    <div class="sec-hdr" onclick="tog(this)">
+      <div class="sec-num">2</div>
+      <div class="sec-title">Dados do Trilho</div>
+      <div class="sec-chev">▾</div>
+    </div>
+    <div class="sec-body">
+
+      <!-- Trilho padrão -->
+      <div id="bloco_trilho_normal">
+        <div class="fg">
+          <div class="f"><label>Estampa – Fabricante</label><input id="fab" placeholder="Ex.: NIPPON, Gerdau, ArcelorMittal"/></div>
+          <div class="f"><label>Ano / Mês de laminação</label><input id="ano_mes" placeholder="Ex.: 2018 mês 7"/></div>
+          <div class="f"><label>Fornada</label><input id="fornada" placeholder="Ex.: HE4MRT 407021 H"/></div>
+          <div class="f"><label>Altura (mm)</label><input id="altura_mm" type="number" placeholder="Ex.: 176"/></div>
+          <div class="f"><label>Perfil / Norma</label><input id="perfil" placeholder="Ex.: TR 68, 136 RE"/></div>
+          <div class="f"><label>Tonelagem Acumulada (Mtb)</label><input id="tmb" type="number" placeholder="Ex.: 890"/></div>
+          <div class="f"><label>Desgaste Vertical (mm)</label><input id="dv" type="number" placeholder="Ex.: 8"/></div>
+          <div class="f"><label>Desgaste Lateral (mm)</label><input id="dl" type="number" placeholder="Ex.: 5"/></div>
+          <div class="f"><label>Último esmerilhamento</label><input id="esmer" placeholder="Ex.: Mar/2024 – 847 Mtb"/></div>
+        </div>
+      </div>
+
+      <!-- Bloco extra para SOLDA -->
+      <div id="bloco_solda" style="display:none">
+        <div class="solda-panel">
+          <div class="solda-panel-title">🔥 Dados Específicos — Partida em Solda</div>
+          <div class="fg">
+            <div class="f h"><label>Trilho Inferior — Estampa</label><input id="sol_inf_estampa" placeholder="Ex.: NIPPON 2020/09"/></div>
+            <div class="f h"><label>Trilho Inferior — Fornada</label><input id="sol_inf_fornada" placeholder="Ex.: HE4MRT 144262 F"/></div>
+            <div class="f h"><label>Trilho Inferior — Emenda / Extensão</label><input id="sol_inf_emenda" placeholder="Ex.: 7,35m com 182mm"/></div>
+            <div class="f h"><label>Trilho Inferior — Altura (mm)</label><input id="sol_inf_altura" type="number" placeholder="182"/></div>
+          </div>
+          <div class="div-lbl">Trilho Superior</div>
+          <div class="fg">
+            <div class="f h"><label>Estampa</label><input id="sol_sup_estampa" placeholder="Ex.: NIPPON 2020/09"/></div>
+            <div class="f h"><label>Tipo / Observação</label><input id="sol_sup_tipo" placeholder="Ex.: Trilho de Encosto da Agulha"/></div>
+            <div class="f h"><label>Altura (mm)</label><input id="sol_sup_altura" type="number" placeholder="183"/></div>
+            <div class="f h"><label>Localização da solda</label><input id="sol_local" placeholder="Ex.: Entrada da chave W1B FFX1 L2"/></div>
+          </div>
+          <div class="div-lbl">Tipo de Solda</div>
+          <div class="fg">
+            <div class="f h"><label>Processo de Solda</label>
+              <select id="sol_processo">
+                <option value="">—</option>
+                <option>Aluminotérmica (Termite)</option>
+                <option>Flash-Butt (elétrica)</option>
+                <option>Solda de Campo – Não identificada</option>
+              </select>
+            </div>
+            <div class="f h"><label>Data da solda (se conhecido)</label><input type="date" id="sol_data"/></div>
+          </div>
+        </div>
+        <!-- trilho padrão também aparece abaixo para solda -->
+        <div class="div-lbl" style="margin-top:14px">Dados gerais do trilho</div>
+        <div class="fg">
+          <div class="f"><label>Fabricante / Estampa</label><input id="fab2" placeholder="Ex.: NIPPON"/></div>
+          <div class="f"><label>Ano / Mês</label><input id="ano_mes2" placeholder="Ex.: 2020/09"/></div>
+          <div class="f"><label>Fornada</label><input id="fornada2" placeholder=""/></div>
+          <div class="f"><label>Altura (mm)</label><input id="altura_mm2" type="number" placeholder="182"/></div>
+          <div class="f"><label>Tonelagem Acumulada (Mtb)</label><input id="tmb2" type="number" placeholder=""/></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- S3: CLASSIFICAÇÃO -->
+  <div class="sec">
+    <div class="sec-hdr" onclick="tog(this)">
+      <div class="sec-num gold">3</div>
+      <div class="sec-title">Classificação do Defeito</div>
+      <div class="sec-chev">▾</div>
+    </div>
+    <div class="sec-body">
+      <div class="fg">
+        <div class="f h"><label>Tipo de Defeito <span class="r">*</span></label>
+          <select id="tipo_def" onchange="updateHint();prog()">
+            <option value="">— Selecionar —</option>
+            <optgroup label="Trilho – Cabeça">
+              <option>Fissura Transversal (TF)</option>
+              <option>Fissura Composta (CF)</option>
+              <option>Fratura de Detalhe / RCF (DF)</option>
+              <option>Head Check / Gauge Corner Cracking</option>
+              <option>Shelling / Descamação</option>
+              <option>Split Vertical de Cabeça (VSH)</option>
+              <option>Split Horizontal de Cabeça (HSH)</option>
+            </optgroup>
+            <optgroup label="Trilho – Alma e Patim">
+              <option>Fratura de Alma (Web)</option>
+              <option>Fratura de Patim (Base)</option>
+              <option>Quebra Ordinária / Sobrecarga</option>
+              <option>Engine Burn Fracture</option>
+            </optgroup>
+            <optgroup label="Solda">
+              <option>Partida em Solda Aluminotérmica</option>
+              <option>Partida em Solda Flash-Butt</option>
+              <option>Defeito em Solda – Origem não identificada</option>
+            </optgroup>
+            <option>Outro</option>
+          </select>
+        </div>
+        <div class="f h"><label>Região do trilho afetada</label>
+          <select id="regiao">
+            <option value="">—</option>
+            <option>Cabeça</option><option>Interface Cabeça/Alma</option>
+            <option>Alma (Web)</option><option>Patim (Base)</option>
+            <option>Solda</option>
+          </select>
+        </div>
+        <div class="f"><label>Extensão (mm)</label><input id="extensao" type="number" placeholder="Ex.: 45"/></div>
+        <div class="f"><label>Trilho substituído (m)</label><input id="subst" type="number" placeholder="Ex.: 6"/></div>
+        <div class="f"><label>Defeitos superficiais observados</label><input id="def_superf" placeholder="Ex.: defeitos na linha de bitola, shelling"/></div>
+        <div class="f"><label>Observação do corte</label><input id="obs_corte" placeholder="Ex.: local de corte, baixa temperatura"/></div>
+      </div>
+      <!-- SEVERIDADE -->
+      <div style="margin-top:14px">
+        <div style="font-size:9.5px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);margin-bottom:8px">Severidade da Ocorrência <span style="color:var(--red)">*</span></div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap" id="sev_btns">
+          <button type="button" class="sev-btn" data-v="Baixa"    onclick="setSev('Baixa')"   >🟢 Baixa</button>
+          <button type="button" class="sev-btn" data-v="Média"    onclick="setSev('Média')"   >🟡 Média</button>
+          <button type="button" class="sev-btn" data-v="Alta"     onclick="setSev('Alta')"    >🟠 Alta</button>
+          <button type="button" class="sev-btn" data-v="Crítica"  onclick="setSev('Crítica')" >🔴 Crítica</button>
+        </div>
+        <input type="hidden" id="severidade"/>
+      </div>
+      <div id="ref_box" class="ref-box" style="display:none">
+        <strong>Referência AREMA / FRA</strong>
+        <p id="ref_txt"></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- S4: DETECÇÃO -->
+  <div class="sec">
+    <div class="sec-hdr" onclick="tog(this)">
+      <div class="sec-num">4</div>
+      <div class="sec-title">Detecção e Histórico de Inspeção</div>
+      <div class="sec-chev">▾</div>
+    </div>
+    <div class="sec-body">
+      <div class="fg">
+        <div class="f h"><label>Método de Detecção <span class="r">*</span></label>
+          <select id="metodo" onchange="prog()">
+            <option value="">—</option>
+            <option>Inspeção Visual – Turma</option>
+            <option>Detecção Ultrassônica – Carro de Ensaio</option>
+            <option>Inspeção Hi-Rail</option>
+            <option>Detecção por GoPro / Vídeo</option>
+            <option>Geometria de Via</option>
+            <option>Sinalização – Falha de Circuito de Via</option>
+            <option>Ruptura em Serviço</option>
+            <option>CCO / CCM</option>
+          </select>
+        </div>
+        <div class="f"><label>Último Ensaio Ultrassônico</label><input type="date" id="ult_ut"/></div>
+        <div class="f"><label>Última Inspeção Visual</label><input type="date" id="ult_vis"/></div>
+        <div class="f"><label>Intervalo desde UT (Mtb)</label><input type="number" id="int_ut" placeholder="Ex.: 12"/></div>
+        <div class="f w"><label>Observações – histórico de inspeção</label>
+          <textarea id="hist_ins" placeholder="Ex.: Último ensaio UT não detectou defeito — nucleação entre intervalos de inspeção..."></textarea>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- S5: CONDIÇÃO DE CONTORNO -->
+  <div class="sec">
+    <div class="sec-hdr" onclick="tog(this)">
+      <div class="sec-num">5</div>
+      <div class="sec-title">Condição de Contorno</div>
+      <div class="sec-chev">▾</div>
+    </div>
+    <div class="sec-body">
+      <div class="contorno-grid" id="contorno_grid">
+        <!-- built by JS -->
+      </div>
+      <div class="fg" style="margin-top:12px">
+        <div class="f"><label>Bitola (mm)</label><input id="bitola" placeholder="Ex.: 1600" type="number"/></div>
+        <div class="f"><label>Raio da curva (m)</label><input id="raio" type="number" placeholder="Ex.: 350"/></div>
+        <div class="f"><label>Superelevação (mm)</label><input id="superelev" type="number" placeholder="Ex.: 85"/></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- S6: TEMPOS OPERACIONAIS -->
+  <div class="sec">
+    <div class="sec-hdr" onclick="tog(this)">
+      <div class="sec-num gold">6</div>
+      <div class="sec-title">Tempos Operacionais</div>
+      <div class="sec-chev">▾</div>
+    </div>
+    <div class="sec-body">
+      <div class="tempos-grid" id="tempos_grid">
+        <!-- built by JS -->
+      </div>
+      <div class="entrega-row" style="margin-top:12px">
+        <label>Entregue ao CCO às</label>
+        <input id="entrega_cco" placeholder="Ex.: 06:19"/>
+        <span style="font-size:12px;color:#166534;font-weight:600;margin-left:12px" id="entrega_cond"></span>
+        <input id="entrega_obs" placeholder="Ex.: Em VMA do trecho, Vel. Restrita 20 km/h" style="flex:2;background:transparent;border:none;outline:none;font-size:12px;color:#166534;"/>
+      </div>
+    </div>
+  </div>
+
+  <!-- S7: FOTOS -->
+  <div class="sec">
+    <div class="sec-hdr" onclick="tog(this)">
+      <div class="sec-num">7</div>
+      <div class="sec-title">Registro Fotográfico</div>
+      <div class="sec-chev">▾</div>
+    </div>
+    <div class="sec-body">
+      <div id="photo_req_warn" style="display:none;background:#fef2f2;border:1.5px solid #fca5a5;border-radius:8px;padding:10px 14px;margin-bottom:12px;font-size:12.5px;color:#991b1b;font-weight:600;">
+        ⚠️ Adicione ao menos a foto da <strong>Face de Fratura</strong> antes de enviar.
+      </div>
+      <div class="photo-grid" id="photo_grid"></div>
+    </div>
+  </div>
+
+  <!-- S8: ANÁLISE DE CAUSA -->
+  <div class="sec">
+    <div class="sec-hdr" onclick="tog(this)">
+      <div class="sec-num red">8</div>
+      <div class="sec-title">Análise de Causa Raiz</div>
+      <div class="sec-chev">▾</div>
+    </div>
+    <div class="sec-body">
+      <div class="fg">
+        <div class="f w"><label>Descrição detalhada da ocorrência <span class="r">*</span></label>
+          <textarea id="descricao" rows="4" oninput="prog()" placeholder="Descrever as condições encontradas, comportamento da fratura, evidências físicas, contexto operacional..."></textarea>
+        </div>
+        <div class="f w"><label>Mecanismo de falha identificado</label>
+          <textarea id="mecanismo" rows="3" placeholder="Ex.: Fadiga de contato rolante (RCF) com iniciação por shelling — curva de alta carga, esmerilhamento vencido há 22 Mtb..."></textarea>
+        </div>
+        <div class="f w"><label>Fatores contribuintes</label>
+          <textarea id="fatores" rows="3" placeholder="Tonelagem, desgaste, temperatura, geometria, histórico de soldas, tráfego..."></textarea>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- S9: TRATATIVA E AÇÕES -->
+  <div class="sec">
+    <div class="sec-hdr" onclick="tog(this)">
+      <div class="sec-num">9</div>
+      <div class="sec-title">Tratativa e Ações</div>
+      <div class="sec-chev">▾</div>
+    </div>
+    <div class="sec-body">
+      <!-- Tratativa imediata destaque -->
+      <div style="background:#f0fdf4;border:1.5px solid #86efac;border-radius:8px;padding:14px 16px;margin-bottom:16px">
+        <div style="font-size:10px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:#166534;margin-bottom:8px;font-family:'Syne',sans-serif">✅ Tratativa Imediata</div>
+        <textarea id="tratativa" rows="3" placeholder="Ex.: Aplicação de tala de emergência (jacaré) e 4 parafusos. Entregue em VMA do trecho..." style="width:100%;background:#fff;border:1px solid #86efac;border-radius:6px;padding:8px 11px;font-family:'DM Sans',sans-serif;font-size:13px;resize:vertical;outline:none;"></textarea>
+      </div>
+      <!-- Botão WhatsApp -->
+      <button class="btn" onclick="copiarWhatsApp()" style="background:#25d366;color:#fff;margin-bottom:16px;font-size:12.5px">
+        📱 Copiar texto para WhatsApp
+      </button>
+      <div class="action-wrap">
+        <table class="action-table">
+          <thead><tr>
+            <th style="width:13%">Tipo</th>
+            <th style="width:37%">Descrição da Ação</th>
+            <th style="width:22%">Responsável</th>
+            <th style="width:15%">Prazo</th>
+            <th style="width:13%">Status</th>
+          </tr></thead>
+          <tbody id="action_tb">
+            <tr>
+              <td><select style="width:100%"><option>Corretiva</option><option>Preventiva</option><option>Monitoramento</option></select></td>
+              <td><textarea placeholder="Ex.: Programar substituição de trilho / Esmerilhamento preventivo..."></textarea></td>
+              <td><input placeholder="Nome / Equipe"/></td>
+              <td><input type="date"/></td>
+              <td><select style="width:100%"><option>Pendente</option><option>Em execução</option><option>Concluída</option></select></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <button class="btn btn-blue" style="margin-top:10px;font-size:12px;padding:7px 14px" onclick="addRow()">+ Adicionar linha</button>
+    </div>
+  </div>
+
+  <!-- S10: OBS E ASSINATURAS -->
+  <div class="sec">
+    <div class="sec-hdr" onclick="tog(this)">
+      <div class="sec-num">10</div>
+      <div class="sec-title">Observações e Validação</div>
+      <div class="sec-chev">▾</div>
+    </div>
+    <div class="sec-body">
+      <div class="fg">
+        <div class="f w"><label>Observações finais</label>
+          <textarea id="obs" rows="3" placeholder="Informações adicionais, referências normativas, número SAP, anexos..."></textarea>
+        </div>
+        <div class="f w"><label>Lições aprendidas / Recomendações</label>
+          <textarea id="licoes" rows="3" placeholder="Recomendações sistêmicas para evitar reincidência..."></textarea>
+        </div>
+      </div>
+      <div class="sig-wrap">
+        <div class="sig-blk">
+          <div class="sig-lbl">Elaborado por</div>
+          <div class="sig-line"></div>
+          <div class="sig-name" id="sn_elab">___________________________</div>
+        </div>
+        <div class="sig-blk">
+          <div class="sig-lbl">Aprovado por</div>
+          <div class="sig-line"></div>
+          <div class="sig-name" id="sn_aprov">___________________________</div>
+        </div>
+        <div class="stamp">
+          <div class="st1">Classificação</div>
+          <div class="st2">USO INTERNO — MRS</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /wrap -->
+<div id="toast"></div>
+
+<!-- HISTÓRICO MODAL -->
+<div id="hist_modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:500;align-items:center;justify-content:center;padding:20px">
+  <div style="background:#fff;border-radius:14px;width:100%;max-width:560px;max-height:80vh;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.3)">
+    <div style="background:var(--navy);border-radius:14px 14px 0 0;padding:16px 20px;display:flex;align-items:center;justify-content:space-between">
+      <span style="font-family:'Syne',sans-serif;font-weight:800;font-size:14px;color:#fff;letter-spacing:.06em;text-transform:uppercase">📋 Histórico de Envios</span>
+      <button onclick="fecharHistorico()" style="background:rgba(255,255,255,.15);border:none;color:#fff;border-radius:50%;width:28px;height:28px;cursor:pointer;font-size:16px">✕</button>
+    </div>
+    <div id="hist_body" style="overflow-y:auto;padding:18px;flex:1"></div>
+  </div>
+</div>
+
+<!-- WHATSAPP MODAL -->
+<div id="wa_modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:500;align-items:center;justify-content:center;padding:20px">
+  <div style="background:#fff;border-radius:14px;width:100%;max-width:520px;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.3)">
+    <div style="background:#075e54;border-radius:14px 14px 0 0;padding:16px 20px;display:flex;align-items:center;justify-content:space-between">
+      <span style="font-family:'Syne',sans-serif;font-weight:800;font-size:14px;color:#fff;letter-spacing:.06em;text-transform:uppercase">📱 Texto para WhatsApp</span>
+      <button onclick="fecharWA()" style="background:rgba(255,255,255,.15);border:none;color:#fff;border-radius:50%;width:28px;height:28px;cursor:pointer;font-size:16px">✕</button>
+    </div>
+    <div style="padding:18px">
+      <textarea id="wa_text" rows="18" readonly style="width:100%;background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:12px;font-size:12.5px;font-family:'DM Mono',monospace;resize:none;outline:none;color:#0f1d2e;line-height:1.6"></textarea>
+      <button onclick="copiarWAText()" class="btn btn-gold" style="width:100%;margin-top:12px;justify-content:center;font-size:14px">📋 Copiar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── SECTION TOGGLE ──
+function tog(hdr){
+  const body=hdr.nextElementSibling,chev=hdr.querySelector('.sec-chev');
+  const open=body.classList.contains('open');
+  body.classList.toggle('open',!open);
+  body.style.display=open?'none':'block';
+  chev.classList.toggle('open',!open);
+  hdr.classList.toggle('open',!open);
+}
+document.querySelectorAll('.sec-body.open').forEach(b=>b.style.display='block');
+
+// ── TIPO SWITCHER ──
+let tipoAtual='trilho';
+function setTipo(t){
+  tipoAtual=t;
+  ['trilho','solda','outro'].forEach(k=>{
+    document.getElementById('btn_'+k).classList.toggle('active',k===t);
+  });
+  document.getElementById('bloco_trilho_normal').style.display=(t==='solda')?'none':'block';
+  document.getElementById('bloco_solda').style.display=(t==='solda')?'block':'none';
+}
+
+// ── STATUS PILL ──
+const pillMap={
+  ruptura:{cls:'ruptura',txt:'Ruptura Completa'},
+  solda:{cls:'solda',txt:'Partida em Solda'},
+  trinca:{cls:'trinca',txt:'Trinca / Defeito'},
+  provisorio:{cls:'provisorio',txt:'Reparo Provisório'},
+};
+function updatePill(){
+  const v=document.getElementById('status_oc').value;
+  const pill=document.getElementById('status_pill');
+  if(pillMap[v]){pill.className='status-pill '+pillMap[v].cls;pill.textContent=pillMap[v].txt;}
+  else{pill.className='status-pill';pill.textContent='— Status —';}
+}
+
+// ── DEFECT HINTS ──
+const hints={
+  'Fissura Transversal (TF)':'AREMA 25A–25D. Fratura interna de origem subsuperficial por fadiga profunda. Inspecionar UT nas seções adjacentes (±20 m). Alta severidade.',
+  'Fissura Composta (CF)':'Combinação de fissura transversal com splitting longitudinal. Risco de ruptura multipla sem aviso visual externo.',
+  'Fratura de Detalhe / RCF (DF)':'FRA: Detail Fracture. Origem superficial por shelling ou head checks. Representa ~75% dos defeitos em CWR na América do Norte. Fortemente ligado à falta de esmerilhamento preventivo.',
+  'Head Check / Gauge Corner Cracking':'RCF superficial no canto de boleto. Comum em curvas de alta carga. Controle: esmerilhamento preventivo (remoção 0,3–0,5 mm/ciclo).',
+  'Shelling / Descamação':'Trinca subsuperficial — precursor de Fratura de Detalhe. Detectável visualmente após afloramento. Monitorar por UT.',
+  'Partida em Solda Aluminotérmica':'Origem típica: porosidade, inclusão de escória ou granulação grosseira na ZTA. Alta incidência em baixas temperaturas (tensão de tração). Análise metalográfica recomendada.',
+  'Partida em Solda Flash-Butt':'Verificar parâmetros de soldagem, oxidação de superfície e curva de resfriamento. Inspecionar soldas adjacentes do mesmo lote.',
+  'Engine Burn Fracture':'Origem em queimadura de patinação de rodas. Zona martensítica endurecida. Alto risco de fratura transversal subsequente.',
+  'Fratura de Alma (Web)':'Verificar furos de talon, bonds elétricos e impactos mecânicos. Risco de ruptura em múltiplos segmentos.',
+  'Fratura de Patim (Base)':'Geralmente por impacto, corrosão localizada ou carregamento irregular de lastro. Inspecionar dormentes e lastro adjacente.',
+};
+function updateHint(){
+  const v=document.getElementById('tipo_def').value;
+  const box=document.getElementById('ref_box'),txt=document.getElementById('ref_txt');
+  if(hints[v]){box.style.display='block';txt.textContent=hints[v];}
+  else box.style.display='none';
+}
+
+// ── CONDIÇÃO DE CONTORNO ──
+const contornos=['Lastro','Dormentes','Fixação'];
+const condOpts=['Ótimo','Bom','Regular','Ruim'];
+const condSel={};
+function buildContorno(){
+  const g=document.getElementById('contorno_grid');
+  contornos.forEach(c=>{
+    condSel[c]='';
+    const box=document.createElement('div');box.className='cond-item';
+    box.innerHTML=`<label>${c}</label><div class="cond-btns" id="cond_${c}"></div>`;
+    g.appendChild(box);
+    const btns=box.querySelector('.cond-btns');
+    condOpts.forEach(o=>{
+      const b=document.createElement('button');
+      b.className='cond-btn';b.textContent=o;b.type='button';
+      b.onclick=()=>{
+        condSel[c]=o;
+        btns.querySelectorAll('.cond-btn').forEach(x=>{
+          x.className='cond-btn';
+        });
+        b.classList.add('sel-'+o.toLowerCase().replace('ó','o'));
+        mark();
+      };
+      btns.appendChild(b);
+    });
+  });
+}
+buildContorno();
+
+// ── TEMPOS ──
+const temposDefs=[
+  {id:'t_horario',label:'Horário da ocorrência'},
+  {id:'t_mobil',label:'Mobilização'},
+  {id:'t_rod',label:'Circulação Rodoviária'},
+  {id:'t_ferr',label:'Circulação Ferroviária'},
+  {id:'t_apr',label:'APR'},
+  {id:'t_circ',label:'Circuito – procurando fratura'},
+  {id:'t_cruz',label:'Cruzamento'},
+  {id:'t_aguard',label:'Aguardando interditado'},
+  {id:'t_serv',label:'Tempo de serviço'},
+  {id:'t_cco',label:'Tempo do CCO'},
+];
+function buildTempos(){
+  const g=document.getElementById('tempos_grid');
+  temposDefs.forEach(t=>{
+    const box=document.createElement('div');box.className='tempo-box';
+    box.innerHTML=`<label>${t.label}</label><input id="${t.id}" placeholder="00:00"/>`;
+    g.appendChild(box);
+  });
+  const tot=document.createElement('div');tot.className='tempo-total';
+  tot.innerHTML=`<label>Total operacional</label><div class="val" id="tempo_total_val">—</div>`;
+  g.appendChild(tot);
+}
+buildTempos();
+
+// ── PHOTOS ──
+const photoSlots=[
+  {l:'Vista Geral',s:'panorâmica + referência de km'},
+  {l:'Face de Fratura',s:'frontal – máx. 30 cm'},
+  {l:'Detalhe do Defeito',s:'região de iniciação'},
+  {l:'Perfil da Cabeça',s:'desgaste lateral e vertical'},
+  {l:'Solda / Junta',s:'região da solda afetada'},
+  {l:'Vista do Trecho',s:'50 m antes e depois'},
+  {l:'Condição do Lastro',s:'lastro e dormentes'},
+  {l:'Pós-Reparo',s:'após ação imediata'},
+];
+const photoData={};
+function buildPhotos(){
+  const g=document.getElementById('photo_grid');
+  photoSlots.forEach((s,i)=>{
+    const slot=document.createElement('div');slot.className='photo-slot';slot.id='ps_'+i;
+    slot.innerHTML=`<img id="pi_${i}" style="display:none"/><button class="pr" type="button" onclick="rmPhoto(${i},event)">✕</button><div class="pi">📷</div><div class="pl">${s.l}</div><div class="ps">${s.s}</div><input type="file" id="pf_${i}" accept="image/*" onchange="ldPhoto(${i},this)"/>`;
+    slot.onclick=()=>document.getElementById('pf_'+i).click();
+    g.appendChild(slot);
+  });
+}
+buildPhotos();
+function ldPhoto(i,inp){
+  if(!inp.files[0])return;
+  const r=new FileReader();
+  r.onload=e=>{
+    photoData[i]=e.target.result;
+    const img=document.getElementById('pi_'+i);img.src=e.target.result;img.style.display='block';
+    document.getElementById('ps_'+i).querySelectorAll('.pi,.pl,.ps').forEach(x=>x.style.visibility='hidden');
+    mark();
+  };r.readAsDataURL(inp.files[0]);
+}
+function rmPhoto(i,e){
+  e.stopPropagation();
+  delete photoData[i];
+  const img=document.getElementById('pi_'+i);img.style.display='none';img.src='';
+  document.getElementById('ps_'+i).querySelectorAll('.pi,.pl,.ps').forEach(x=>x.style.visibility='');
+  document.getElementById('pf_'+i).value='';
+}
+
+// ── ADD ACTION ROW ──
+function addRow(){
+  const tb=document.getElementById('action_tb');
+  const tr=document.createElement('tr');
+  tr.innerHTML=`<td><select style="width:100%"><option>Corretiva</option><option>Preventiva</option><option>Monitoramento</option></select></td><td><textarea placeholder="Descrever..."></textarea></td><td><input placeholder="Nome / Equipe"/></td><td><input type="date"/></td><td><select style="width:100%"><option>Pendente</option><option>Em execução</option><option>Concluída</option></select></td>`;
+  tb.appendChild(tr);
+}
+
+// ── PROGRESS ──
+const reqFields=['numero','data_ev','secao','km','info_por','tipo_def','metodo','descricao','severidade'];
+function prog(){
+  let n=0;
+  reqFields.forEach(id=>{const e=document.getElementById(id);if(e&&e.value.trim())n++;});
+  const p=Math.round(n/reqFields.length*100);
+  document.getElementById('pfill').style.width=p+'%';
+  document.getElementById('pct').textContent=p+'%';
+  // sync sig names
+  const el=document.getElementById('elaborado').value;
+  const ap=document.getElementById('aprovado').value;
+  document.getElementById('sn_elab').textContent=el||'___________________________';
+  document.getElementById('sn_aprov').textContent=ap||'___________________________';
+}
+
+// ── SAVE ──
+function mark(){document.getElementById('sdot').classList.remove('ok');}
+document.addEventListener('input',mark);document.addEventListener('change',mark);
+
+function collectAll(){
+  const ids=['numero','data_ev','hora_ev','secao','status_oc',
+    'km','linha','fila','posicao_curva','tipo_ativo','desc_local','patio','info_por','info_a','elaborado','aprovado','malha',
+    'fab','ano_mes','fornada','altura_mm','perfil','tmb','dv','dl','esmer',
+    'sol_inf_estampa','sol_inf_fornada','sol_inf_emenda','sol_inf_altura',
+    'sol_sup_estampa','sol_sup_tipo','sol_sup_altura','sol_local','sol_processo','sol_data',
+    'fab2','ano_mes2','fornada2','altura_mm2','tmb2',
+    'tipo_def','regiao','extensao','subst','def_superf','obs_corte',
+    'metodo','ult_ut','ult_vis','int_ut','hist_ins',
+    'bitola','raio','superelev',
+    'entrega_cco','entrega_obs',
+    ...temposDefs.map(t=>t.id),
+    'descricao','mecanismo','fatores','tratativa','obs','licoes','severidade',
+  ];
+  const d={};
+  ids.forEach(id=>{const e=document.getElementById(id);if(e)d[id]=e.value;});
+  d.tipo=tipoAtual;
+  d.contorno=condSel;
+  d.actions=Array.from(document.querySelectorAll('#action_tb tr')).map(tr=>{
+    const c=tr.querySelectorAll('td');
+    return{tipo:c[0]?.querySelector('select')?.value||'',acao:c[1]?.querySelector('textarea')?.value||'',resp:c[2]?.querySelector('input')?.value||'',prazo:c[3]?.querySelector('input')?.value||'',status:c[4]?.querySelector('select')?.value||''};
+  });
+  d.photos=photoData;
+  return d;
+}
+
+function salvar(){
+  const d=collectAll();
+  localStorage.setItem('mrsInforme2',JSON.stringify(d));
+  document.getElementById('sdot').classList.add('ok');
+  toast('✓ Rascunho salvo');
+}
+
+function load(){
+  try{
+    const raw=localStorage.getItem('mrsInforme2');if(!raw)return;
+    const d=JSON.parse(raw);
+    Object.keys(d).forEach(id=>{
+      const e=document.getElementById(id);
+      if(e&&typeof d[id]==='string')e.value=d[id];
+    });
+    if(d.tipo)setTipo(d.tipo);
+    if(d.severidade) setSev(d.severidade);
+    if(d.contorno)Object.keys(d.contorno).forEach(c=>{
+      if(!d.contorno[c])return;
+      const o=d.contorno[c];
+      document.querySelectorAll(`#cond_${c} .cond-btn`).forEach(b=>{
+        if(b.textContent===o){b.classList.add('sel-'+o.toLowerCase().replace('ó','o'));condSel[c]=o;}
+      });
+    });
+    if(d.photos)Object.keys(d.photos).forEach(i=>{
+      photoData[i]=d.photos[i];
+      const img=document.getElementById('pi_'+i);
+      if(img){img.src=d.photos[i];img.style.display='block';
+        document.getElementById('ps_'+i)?.querySelectorAll('.pi,.pl,.ps').forEach(x=>x.style.visibility='hidden');
+      }
+    });
+    updatePill();updateHint();prog();
+    document.getElementById('sdot').classList.add('ok');
+  }catch(e){}
+}
+
+function limpar(){
+  if(!confirm('Limpar formulário? Dados não salvos serão perdidos.'))return;
+  localStorage.removeItem('mrsInforme2');location.reload();
+}
+
+// ── TOAST ──
+let toastT;
+function toast(msg){
+  const el=document.getElementById('toast');
+  el.textContent=msg;el.classList.add('show');
+  clearTimeout(toastT);toastT=setTimeout(()=>el.classList.remove('show'),2800);
+}
+
+// ── PDF ──
+function gerarPDF(){
+  const d=collectAll();
+  const {jsPDF}=window.jspdf;
+  const doc=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
+  const W=210,H=297,M=14;
+  let y=0;
+
+  const C={
+    navy:[12,35,64],blue:[26,79,138],gold:[232,146,10],
+    gray:[100,116,139],lt:[241,245,249],red:[192,57,43],
+    green:[22,163,74],white:[255,255,255],text:[15,29,46],
+    goldlt:[255,248,237],borderg:[209,217,230],
+  };
+
+  function newPage(){
+    doc.addPage();y=18;
+    doc.setFillColor(...C.navy);doc.rect(0,0,W,11,'F');
+    doc.setFontSize(7.5);doc.setFont('helvetica','bold');doc.setTextColor(...C.white);
+    doc.text('MRS LOGÍSTICA · VIA PERMANENTE · INFORME DE FRATURA',M,7.5);
+    doc.text(`Nº ${d.numero||'—'}`,W-M,7.5,{align:'right'});
+  }
+
+  function chk(n){if(y+n>H-16)newPage();}
+
+  function secBar(title,accent){
+    chk(11);
+    doc.setFillColor(...(accent?C.gold:C.navy));
+    doc.rect(M,y,W-M*2,8,'F');
+    doc.setFontSize(8.5);doc.setFont('helvetica','bold');
+    doc.setTextColor(...(accent?C.navy:C.white));
+    doc.text(title.toUpperCase(),M+4,y+5.8);
+    y+=11;
+  }
+
+  function lv(lbl,val,x,yy,cw){
+    doc.setFontSize(7);doc.setFont('helvetica','bold');doc.setTextColor(...C.gray);
+    doc.text(lbl.toUpperCase(),x,yy);
+    doc.setFont('helvetica','normal');doc.setTextColor(...C.text);doc.setFontSize(9.5);
+    const lines=doc.splitTextToSize(val||'—',cw-2);
+    doc.text(lines,x,yy+4.2);
+    return yy+4.2+(lines.length-1)*4.2;
+  }
+
+  function r2(l1,v1,l2,v2,yy){
+    const hw=(W-M*2-6)/2;
+    const a=lv(l1,v1,M,yy,hw);const b=lv(l2,v2,M+hw+6,yy,hw);
+    return Math.max(a,b)+5;
+  }
+  function r4(flds,yy){
+    const cw=(W-M*2-12)/4;
+    flds.forEach((f,i)=>lv(f.l,f.v,M+i*(cw+4),yy,cw));
+    return yy+4.2+5;
+  }
+
+  function blk(lbl,val,yy){
+    chk(18);
+    doc.setFontSize(7);doc.setFont('helvetica','bold');doc.setTextColor(...C.gray);
+    doc.text(lbl.toUpperCase(),M,yy);yy+=4.5;
+    doc.setFont('helvetica','normal');doc.setTextColor(...C.text);doc.setFontSize(9.5);
+    const lines=doc.splitTextToSize(val||'—',W-M*2);
+    doc.text(lines,M,yy);
+    return yy+lines.length*4.2+4;
+  }
+
+  // ── HEADER ──
+  doc.setFillColor(...C.navy);doc.rect(0,0,W,48,'F');
+  doc.setFillColor(...C.gold);doc.rect(0,46,W,3,'F');
+  // logo
+  doc.setFillColor(26,63,110);doc.roundedRect(M,8,44,13,2,2,'F');
+  doc.setFontSize(8);doc.setFont('helvetica','bold');doc.setTextColor(...C.gold);
+  doc.text('MRS LOGÍSTICA',M+22,13.5,{align:'center'});
+  doc.setFontSize(6.5);doc.setTextColor(...C.white);
+  doc.text('VIA PERMANENTE',M+22,18,{align:'center'});
+  // title
+  doc.setFontSize(16);doc.setFont('helvetica','bold');doc.setTextColor(...C.white);
+  const tipoLabel=d.tipo==='solda'?'PARTIDA EM SOLDA':d.tipo==='outro'?'OCORRÊNCIA DE VIA':'FRATURA DE TRILHO';
+  doc.text('INFORME DE INVESTIGAÇÃO',64,17);
+  doc.setTextColor(...C.gold);doc.setFontSize(13);doc.text(tipoLabel,64,25);
+  // num box
+  doc.setFontSize(7.5);doc.setFont('helvetica','bold');doc.setTextColor(160,190,230);
+  doc.text('Nº DO INFORME',W-M-42,13,{align:'center'});
+  doc.setFontSize(11);doc.setTextColor(...C.white);
+  doc.text(d.numero||'—',W-M-42,20,{align:'center'});
+  doc.setFontSize(8);doc.setTextColor(160,190,230);
+  doc.text(d.data_ev||'—',W-M-42,26,{align:'center'});
+  // status
+  const pilColors={ruptura:{bg:[192,57,43,.3],t:[255,205,205]},solda:{bg:[232,146,10,.2],t:[255,224,130]},trinca:{bg:[26,79,138,.3],t:[187,222,251]},provisorio:{bg:[22,163,74,.2],t:[200,230,201]}};
+  const pc=pilColors[d.status_oc]||{bg:[60,70,90],t:C.white};
+  doc.setFillColor(pc.bg[0],pc.bg[1],pc.bg[2]);doc.roundedRect(M,35,72,8,2,2,'F');
+  doc.setFontSize(8);doc.setFont('helvetica','bold');doc.setTextColor(...pc.t);
+  const pilTxt=pillMap[d.status_oc]?.txt||'—';
+  doc.text(pilTxt,M+36,40,{align:'center'});
+  // meta
+  const metaY=35;
+  doc.setFontSize(7);doc.setTextColor(160,190,230);
+  doc.text(`SEÇÃO: ${d.secao||'—'}  ·  KM: ${d.km||'—'}  ·  HORÁRIO: ${d.hora_ev||'—'}`,64,metaY+5);
+  y=53;
+
+  // ── S1 IDENTIFICAÇÃO ──
+  secBar('1. Identificação');
+  chk(22);
+  y=r4([{l:'Seção / Pátio',v:d.secao},{l:'Km / Localização',v:d.km},{l:'Linha',v:d.linha},{l:'Fila / Lado',v:d.fila}],y);
+  y=r4([{l:'Tipo de ativo',v:d.tipo_ativo},{l:'Posição curva',v:d.posicao_curva},{l:'Descrição do local',v:d.desc_local},{l:'Pátio',v:d.patio}],y);
+  y=r4([{l:'Informado por',v:d.info_por},{l:'Informado a',v:d.info_a},{l:'Elaborado por',v:d.elaborado},{l:'Malha / Rede',v:d.malha}],y);
+
+  // ── S2 DADOS DO TRILHO ──
+  secBar('2. Dados do Trilho');
+  chk(22);
+  if(d.tipo==='solda'){
+    // solda boxes
+    doc.setFillColor(...C.goldlt);doc.setDrawColor(253,230,138);
+    doc.roundedRect(M,y,W-M*2,22,2,2,'FD');
+    doc.setFontSize(7.5);doc.setFont('helvetica','bold');doc.setTextColor(146,64,14);
+    doc.text('PARTIDA EM SOLDA',M+4,y+6);
+    const hw=(W-M*2-6)/2;
+    lv('Trilho Inferior – Estampa',d.sol_inf_estampa,M,y+9,hw);
+    lv('Trilho Inferior – Fornada',d.sol_inf_fornada,M+hw+6,y+9,hw);
+    y+=24;
+    chk(14);
+    y=r4([{l:'Inf – Emenda',v:d.sol_inf_emenda},{l:'Inf – Altura (mm)',v:d.sol_inf_altura},{l:'Sup – Estampa',v:d.sol_sup_estampa},{l:'Sup – Tipo',v:d.sol_sup_tipo}],y);
+    y=r4([{l:'Sup – Altura (mm)',v:d.sol_sup_altura},{l:'Localização da solda',v:d.sol_local},{l:'Processo de solda',v:d.sol_processo},{l:'Data da solda',v:d.sol_data}],y);
+    // general
+    y=r4([{l:'Fabricante',v:d.fab2},{l:'Ano/Mês',v:d.ano_mes2},{l:'Fornada',v:d.fornada2},{l:'Altura (mm)',v:d.altura_mm2}],y);
+  } else {
+    y=r4([{l:'Fabricante / Estampa',v:d.fab},{l:'Ano / Mês Laminação',v:d.ano_mes},{l:'Fornada',v:d.fornada},{l:'Altura (mm)',v:d.altura_mm}],y);
+    y=r4([{l:'Perfil / Norma',v:d.perfil},{l:'Tonelagem (Mtb)',v:d.tmb},{l:'Desgaste Vert. (mm)',v:d.dv},{l:'Desgaste Lat. (mm)',v:d.dl}],y);
+    if(d.esmer){chk(10);y=r2('Último Esmerilhamento',''+d.esmer,'','',y);}
+  }
+
+  // ── S3 CLASSIFICAÇÃO ──
+  secBar('3. Classificação do Defeito',true);
+  chk(18);
+  y=r4([{l:'Tipo de Defeito',v:d.tipo_def},{l:'Região Afetada',v:d.regiao},{l:'Extensão (mm)',v:d.extensao},{l:'Trilho subst. (m)',v:d.subst}],y);
+  if(d.def_superf||d.obs_corte)y=r2('Defeitos superficiais',d.def_superf,'Obs. do corte',d.obs_corte,y);
+  if(d.tipo_def&&hints[d.tipo_def]){
+    chk(14);
+    doc.setFillColor(...C.goldlt);doc.setDrawColor(253,230,138);
+    doc.roundedRect(M,y,W-M*2,13,2,2,'FD');
+    doc.setFontSize(6.5);doc.setFont('helvetica','bold');doc.setTextColor(146,64,14);
+    doc.text('REF. AREMA / FRA:',M+3,y+5);
+    doc.setFont('helvetica','normal');doc.setTextColor(120,53,15);doc.setFontSize(8);
+    const hl=doc.splitTextToSize(hints[d.tipo_def],W-M*2-6);
+    doc.text(hl.slice(0,2),M+3,y+9);
+    y+=16;
+  }
+
+  // ── S4 DETECÇÃO ──
+  secBar('4. Detecção e Histórico de Inspeção');
+  chk(18);
+  y=r4([{l:'Método de Detecção',v:d.metodo},{l:'Último Ensaio UT',v:d.ult_ut},{l:'Última Insp. Visual',v:d.ult_vis},{l:'Intervalo UT (Mtb)',v:d.int_ut}],y);
+  if(d.hist_ins)y=blk('Observações – Histórico',d.hist_ins,y);
+
+  // ── S5 CONTORNO ──
+  secBar('5. Condição de Contorno');
+  chk(18);
+  const cLabels=['Lastro','Dormentes','Fixação'];
+  const cVals=cLabels.map(c=>d.contorno[c]||'—');
+  y=r4([
+    {l:'Lastro',v:cVals[0]},{l:'Dormentes',v:cVals[1]},{l:'Fixação',v:cVals[2]},
+    {l:'Bitola (mm)',v:d.bitola}
+  ],y);
+  if(d.raio||d.superelev)y=r2('Raio da Curva (m)',d.raio,'Superelevação (mm)',d.superelev,y);
+
+  // ── S6 TEMPOS ──
+  secBar('6. Tempos Operacionais',true);
+  chk(28);
+  const tRows=[[
+    {l:'Horário',v:d.t_horario},{l:'Mobilização',v:d.t_mobil},{l:'Circ. Rodoviária',v:d.t_rod},{l:'Circ. Ferroviária',v:d.t_ferr}
+  ],[
+    {l:'APR',v:d.t_apr},{l:'Circuito – Fratura',v:d.t_circ},{l:'Cruzamento',v:d.t_cruz},{l:'Aguard. Interdit.',v:d.t_aguard}
+  ],[
+    {l:'Tempo de Serviço',v:d.t_serv},{l:'Tempo CCO',v:d.t_cco},{l:'Entregue CCO às',v:d.entrega_cco},{l:'Condição de entrega',v:d.entrega_obs}
+  ]];
+  tRows.forEach(row=>{chk(10);y=r4(row,y);});
+
+  // ── S7 FOTOS ──
+  const pkeys=Object.keys(photoData);
+  if(pkeys.length>0){
+    secBar('7. Registro Fotográfico');
+    const iW=56,iH=40,gap=4,cols=3;
+    let px=M,pr=y,pc=0;
+    for(const k of pkeys){
+      chk(iH+10);
+      if(pc>0&&pc%cols===0){pr=y;px=M;}
+      try{doc.addImage(photoData[k],'JPEG',px,pr,iW,iH);}catch(e){}
+      doc.setFontSize(6.5);doc.setFont('helvetica','bold');doc.setTextColor(...C.gray);
+      doc.text(photoSlots[parseInt(k)]?.l||('Foto '+(parseInt(k)+1)),px+iW/2,pr+iH+4,{align:'center'});
+      px+=iW+gap;pc++;
+      if(pc%cols===0)y=pr+iH+10;
+    }
+    if(pc%cols!==0)y=pr+iH+10;
+  }
+
+  // ── S8 CAUSA RAIZ ──
+  secBar('8. Análise de Causa Raiz',true);
+  chk(18);
+  y=blk('Descrição da Ocorrência',d.descricao,y);
+  y=blk('Mecanismo de Falha',d.mecanismo,y);
+  if(d.fatores)y=blk('Fatores Contribuintes',d.fatores,y);
+
+  // ── S9 TRATATIVA ──
+  secBar('9. Tratativa e Ações');
+  chk(18);
+  if(d.tratativa){
+    chk(16);
+    doc.setFillColor(240,253,244);doc.setDrawColor(134,239,172);
+    doc.roundedRect(M,y,W-M*2,14,2,2,'FD');
+    doc.setFontSize(7.5);doc.setFont('helvetica','bold');doc.setTextColor(22,101,52);
+    doc.text('✅ TRATATIVA IMEDIATA',M+4,y+6);
+    doc.setFont('helvetica','normal');doc.setFontSize(9.5);doc.setTextColor(22,101,52);
+    const tl=doc.splitTextToSize(d.tratativa,W-M*2-8);
+    doc.text(tl.slice(0,2),M+4,y+10.5);
+    y+=17;
+  }
+  // actions table
+  const acts=(d.actions||[]).filter(a=>a.acao||a.tipo);
+  if(acts.length>0){
+    chk(14);
+    const cols9=[24,70,36,24,24];
+    let ax=M;
+    doc.setFillColor(...C.navy);doc.rect(M,y,W-M*2,7.5,'F');
+    doc.setFontSize(7);doc.setFont('helvetica','bold');doc.setTextColor(...C.white);
+    ['TIPO','DESCRIÇÃO','RESPONSÁVEL','PRAZO','STATUS'].forEach((h,i)=>{doc.text(h,ax+2,y+5.3);ax+=cols9[i];});
+    y+=7.5;
+    acts.forEach((row,ri)=>{
+      const lines=doc.splitTextToSize(row.acao||'—',cols9[1]-4);
+      const rh=Math.max(8,lines.length*4+3);
+      chk(rh);
+      doc.setFillColor(ri%2===0?248:242,ri%2===0?250:246,ri%2===0?252:250);
+      doc.rect(M,y,W-M*2,rh,'F');
+      doc.setDrawColor(...C.borderg);doc.rect(M,y,W-M*2,rh,'D');
+      ax=M;
+      const tc=row.tipo==='Corretiva'?C.red:row.tipo==='Preventiva'?C.blue:C.gray;
+      doc.setFontSize(8);doc.setFont('helvetica','bold');doc.setTextColor(...tc);
+      doc.text(row.tipo||'—',ax+2,y+rh/2+1.5);ax+=cols9[0];
+      doc.setFont('helvetica','normal');doc.setTextColor(...C.text);
+      doc.text(lines,ax+2,y+5);ax+=cols9[1];
+      doc.text(row.resp||'—',ax+2,y+rh/2+1.5);ax+=cols9[2];
+      doc.text(row.prazo||'—',ax+2,y+rh/2+1.5);ax+=cols9[3];
+      const sc=row.status==='Concluída'?C.green:row.status==='Em execução'?C.blue:C.red;
+      doc.setTextColor(...sc);doc.setFont('helvetica','bold');
+      doc.text(row.status||'—',ax+2,y+rh/2+1.5);
+      y+=rh;
+    });
+    y+=5;
+  }
+
+  // ── S10 OBS / ASSINATURAS ──
+  if(d.obs||d.licoes){
+    secBar('10. Observações e Lições Aprendidas');
+    if(d.obs)y=blk('Observações',d.obs,y);
+    if(d.licoes)y=blk('Lições Aprendidas / Recomendações',d.licoes,y);
+  }
+
+  // signatures
+  chk(36);y+=4;
+  doc.setDrawColor(...C.borderg);doc.setLineWidth(.5);doc.line(M,y,W-M,y);y+=6;
+  const sw=(W-M*2-10)/2;
+  [{lbl:'Elaborado por',nm:d.elaborado,cargo:''},{lbl:'Aprovado por',nm:d.aprovado,cargo:''}].forEach((s,i)=>{
+    const sx=M+i*(sw+10);
+    doc.setFontSize(7.5);doc.setFont('helvetica','bold');doc.setTextColor(...C.gray);
+    doc.text(s.lbl.toUpperCase(),sx,y);
+    doc.setDrawColor(...C.gray);doc.line(sx,y+10,sx+sw-12,y+10);
+    doc.setFont('helvetica','normal');doc.setTextColor(...C.text);doc.setFontSize(9.5);
+    doc.text(s.nm||'___________________________',sx,y+15);
+  });
+  doc.setFillColor(...C.navy);doc.roundedRect(W-M-50,y,50,20,3,3,'F');
+  doc.setFontSize(6.5);doc.setFont('helvetica','bold');doc.setTextColor(160,180,220);
+  doc.text('CLASSIFICAÇÃO',W-M-25,y+7,{align:'center'});
+  doc.setFontSize(9);doc.setTextColor(...C.gold);
+  doc.text('USO INTERNO — MRS',W-M-25,y+14,{align:'center'});
+
+  // page numbers
+  const np=doc.internal.getNumberOfPages();
+  for(let p=1;p<=np;p++){
+    doc.setPage(p);
+    doc.setFillColor(...C.navy);doc.rect(0,H-9,W,9,'F');
+    doc.setFontSize(6.5);doc.setFont('helvetica','normal');doc.setTextColor(160,190,230);
+    doc.text('MRS LOGÍSTICA · ENGENHARIA DE VIA PERMANENTE · USO INTERNO',M,H-3.5);
+    doc.text(`${p}/${np}`,W-M,H-3.5,{align:'right'});
+  }
+
+  const fn=`Informe_${d.tipo==='solda'?'Solda':'Fratura'}_${d.secao||''}_${d.numero||'RASCUNHO'}_${d.data_ev||''}.pdf`.replace(/\s/g,'_');
+  doc.save(fn);
+  toast(`✓ PDF gerado: ${fn}`);
+}
+
+// ── SEVERITY ──
+let sevAtual = '';
+function setSev(v){
+  sevAtual = v;
+  document.getElementById('severidade').value = v;
+  document.querySelectorAll('.sev-btn').forEach(b=>{
+    b.className = 'sev-btn' + (b.dataset.v === v ? ' sev-'+v : '');
+  });
+  prog();
+}
+
+// ── AUTO NUMERO ──
+function gerarNumero(){
+  const hoje = new Date();
+  const ymd = hoje.getFullYear().toString() +
+    String(hoje.getMonth()+1).padStart(2,'0') +
+    String(hoje.getDate()).padStart(2,'0');
+  const chave = 'mrsSeq_'+ymd;
+  let seq = parseInt(localStorage.getItem(chave)||'0') + 1;
+  localStorage.setItem(chave, seq);
+  return `MRS-VP-FT-${ymd}-${String(seq).padStart(3,'0')}`;
+}
+
+// ── WHATSAPP ──
+function copiarWhatsApp(){
+  const d = collectAll();
+  const sevIcon = {Baixa:'🟢',Média:'🟡',Alta:'🟠',Crítica:'🔴'}[d.severidade]||'⚪';
+  const tipoLabel = d.tipo==='solda' ? 'TRILHO Partida em solda' : d.tipo==='outro' ? 'Ocorrência de Via' : 'Fratura em trilho';
+
+  const txt =
+`📌 *OCORRÊNCIA:* ${tipoLabel}
+${sevIcon} *SEVERIDADE:* ${d.severidade||'—'}
+
+📍 *IDENTIFICAÇÃO DO ATIVO:* ${d.secao||'—'}
+*Data:* ${d.data_ev||'—'}
+*Horário:* ${d.hora_ev||'—'}
+*Km:* ${d.km||'—'}
+*Linha:* ${d.linha||'—'}
+*Fila:* ${d.fila||'—'}
+*Descrição Local:* ${d.desc_local||'—'}
+*Ativo:* ${d.tipo_ativo||'—'}
+
+📋 *DADOS DO TRILHO:*
+*Fabricante/Estampa:* ${d.fab||d.fab2||'—'}
+*Ano/Mês:* ${d.ano_mes||d.ano_mes2||'—'}
+*Fornada:* ${d.fornada||d.fornada2||'—'}
+*Altura:* ${d.altura_mm||d.altura_mm2||'—'} mm
+${d.tipo==='solda'?`*Trilho Inferior:* ${d.sol_inf_estampa||'—'} | Emenda: ${d.sol_inf_emenda||'—'}
+*Trilho Superior:* ${d.sol_sup_estampa||'—'} | ${d.sol_sup_tipo||'—'}
+*Localização Solda:* ${d.sol_local||'—'}`:''}
+
+⏰ *TEMPOS:*
+*Horário:* ${d.t_horario||'—'}
+*Mobilização:* ${d.t_mobil||'—'}
+*Circulação rodoviária:* ${d.t_rod||'—'}
+*Circulação ferroviária:* ${d.t_ferr||'—'}
+*Circuito procurando fratura:* ${d.t_circ||'—'}
+*Cruzamento:* ${d.t_cruz||'—'}
+*Aguardando interditado:* ${d.t_aguard||'—'}
+*Tempo de serviço:* ${d.t_serv||'—'}
+Entregue ao CCO às ${d.entrega_cco||'—'} — ${d.entrega_obs||''}
+
+🛤️ *CONDIÇÃO DE CONTORNO:*
+*Lastro:* ${d.contorno?.Lastro||'—'}
+*Dormentes:* ${d.contorno?.Dormentes||'—'}
+*Fixação:* ${d.contorno?.Fixacao||'—'}
+*Bitola:* ${d.bitola||'—'} mm
+
+✅ *TRATATIVA:*
+${d.tratativa||'—'}
+
+📞 *INFORMADO POR:* ${d.info_por||'—'}
+*Informado a:* ${d.info_a||'—'}
+
+✅ *OBSERVAÇÃO:*
+${d.obs||'—'}
+
+_Informe Nº ${d.numero||'—'} · Elaborado por: ${d.elaborado||'—'}_`;
+
+  document.getElementById('wa_text').value = txt;
+  document.getElementById('wa_modal').style.display = 'flex';
+}
+
+function copiarWAText(){
+  const txt = document.getElementById('wa_text').value;
+  navigator.clipboard.writeText(txt).then(()=>{
+    toast('✅ Texto copiado! Cole no WhatsApp.');
+    fecharWA();
+  }).catch(()=>{
+    document.getElementById('wa_text').select();
+    document.execCommand('copy');
+    toast('✅ Texto copiado!');
+    fecharWA();
+  });
+}
+function fecharWA(){ document.getElementById('wa_modal').style.display='none'; }
+
+// ── HISTÓRICO ──
+function verHistorico(){
+  const enviados = JSON.parse(localStorage.getItem('mrsEnviados')||'[]');
+  const body = document.getElementById('hist_body');
+  if(enviados.length === 0){
+    body.innerHTML = '<div style="text-align:center;padding:28px;color:#94a3b8;font-size:14px">Nenhum informe enviado ainda neste dispositivo.</div>';
+  } else {
+    const reversed = [...enviados].reverse();
+    body.innerHTML = reversed.map((e,i)=>`
+      <div style="display:flex;align-items:center;gap:14px;padding:12px 14px;border-radius:8px;background:${i%2===0?'#f8fafc':'#fff'};border:1px solid #e2e8f0;margin-bottom:8px">
+        <div style="background:var(--navy);color:#fff;border-radius:6px;padding:4px 10px;font-family:'DM Mono',monospace;font-size:12px;font-weight:600;white-space:nowrap">${e.numero||'—'}</div>
+        <div style="flex:1">
+          <div style="font-weight:600;font-size:13px">${e.data||'—'}</div>
+          <div style="font-size:11px;color:#64748b">${new Date(e.ts).toLocaleString('pt-BR')}</div>
+        </div>
+        <div style="color:#16a34a;font-size:11px;font-weight:700">✅ Enviado</div>
+      </div>
+    `).join('');
+  }
+  document.getElementById('hist_modal').style.display = 'flex';
+}
+function fecharHistorico(){ document.getElementById('hist_modal').style.display='none'; }
+// Close modals on backdrop click
+document.getElementById('hist_modal')?.addEventListener('click', e=>{ if(e.target===e.currentTarget) fecharHistorico(); });
+document.getElementById('wa_modal')?.addEventListener('click', e=>{ if(e.target===e.currentTarget) fecharWA(); });
+
+// ── GOOGLE SHEETS INTEGRATION ──
+const SHEETS_URL = 'https://script.google.com/macros/s/AKfycbyr3Tw9lPz0q5G0WVjAkGWZb4qckKklzo3UWlEbu55WV-bX6rrxND7L3AqPzDOsY6_o/exec';
+
+async function enviarSheets(){
+  const d = collectAll();
+
+  // Validação
+  const faltando = [];
+  if(!d.numero)    faltando.push('Número do Informe');
+  if(!d.data_ev)   faltando.push('Data');
+  if(!d.km)        faltando.push('Km / Localização');
+  if(!d.tipo_def)  faltando.push('Tipo de Defeito');
+  if(!d.severidade) faltando.push('Severidade');
+  if(!photoData[1]) faltando.push('Foto – Face de Fratura');
+  if(faltando.length > 0){
+    document.getElementById('photo_req_warn').style.display = !photoData[1] ? 'block' : 'none';
+    toast('⚠️ Preencha: ' + faltando.join(', '));
+    return;
+  }
+
+  if(!confirm(`Enviar informe ${d.numero} ao banco de dados?\n\nApós confirmação ele será registrado na planilha da MRS.`)) return;
+
+  const btn = document.getElementById('btn_enviar');
+  btn.disabled = true; btn.textContent = '⏳ Enviando...';
+
+  try {
+    const payload = {...d}; delete payload.photos;
+    await fetch(SHEETS_URL, {
+      method:'POST', mode:'no-cors',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify(payload),
+    });
+    toast('✅ Informe enviado ao banco com sucesso!');
+    btn.textContent = '✅ Enviado'; btn.style.background = '#15803d';
+    const enviados = JSON.parse(localStorage.getItem('mrsEnviados')||'[]');
+    enviados.push({numero:d.numero, data:d.data_ev, ts:new Date().toISOString()});
+    localStorage.setItem('mrsEnviados', JSON.stringify(enviados));
+    setTimeout(()=>{ btn.disabled=false; btn.textContent='📊 Enviar ao Banco'; btn.style.background=''; }, 4000);
+  } catch(err){
+    toast('❌ Erro ao enviar. Verifique sua conexão.');
+    btn.disabled=false; btn.textContent='📊 Enviar ao Banco';
+  }
+}
+
+// ── INIT ──
+window.addEventListener('load',()=>{
+  // Auto-gera número se vazio
+  const numEl = document.getElementById('numero');
+  if(!numEl.value) numEl.value = gerarNumero();
+  load(); prog();
+});
+setInterval(salvar, 60000);
+</script>
+</body>
+</html>
